@@ -1,6 +1,7 @@
 import { updateStatus, incrementRetry } from '../modules/jobs/job-repository';
 import { job, status } from '../modules/jobs/job-types';
 import { addToDelayedQueue } from '../queue/delayed-queue';
+import { pushToDeadQueue } from '../queue/dead-queue';
 
 const BASE_DELAY_MS = 1000;
 const MAX_DELAY_MS = 60000;
@@ -21,7 +22,8 @@ export async function handleJobRetry(job: job): Promise<void>{
 
   if (updatedJob.retry_count >= updatedJob.max_retries){
     await updateStatus(job.id, status.FAILED);
-    console.error(`Job ${job.id} permanently FAILED after ${updatedJob.retry_count} retries`);
+    await pushToDeadQueue(job.id); 
+    console.error(`Job ${job.id} permanently FAILED — moved to dead letter queue`);
     return;
   }
 

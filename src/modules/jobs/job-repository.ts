@@ -87,3 +87,34 @@ export async function unlockJob(jobId: string): Promise<job | undefined>{
   );
   return result.rows[0];
 }
+
+export async function markJobStarted(jobId: string): Promise<job | undefined>{
+  const result = await pool.query(
+    `UPDATE jobs
+     SET started_at = NOW(), updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [jobId]
+  );
+  return result.rows[0];
+}
+
+export async function markJobCompleted(jobId: string): Promise<job | undefined>{
+  const result = await pool.query(
+    `UPDATE jobs
+     SET completed_at = NOW(),
+         duration_ms = EXTRACT(EPOCH FROM (NOW() - started_at)) * 1000,
+         updated_at = NOW()
+     WHERE id = $1
+     RETURNING *`,
+    [jobId]
+  );
+  return result.rows[0];
+}
+
+export async function getDeadJobs(): Promise<job[]>{
+  const result = await pool.query(
+    `SELECT * FROM jobs WHERE status = 'FAILED' ORDER BY updated_at DESC`
+  );
+  return result.rows;
+}

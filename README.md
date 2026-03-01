@@ -35,9 +35,20 @@ This system decouples **event ingestion** from **job execution**, ensuring:
 ---
 
 ##  Architecture
-Client -> Event API -> Rules Engine -> Job Creation -> Redis Queue -> Worker -> Execution
-↓
-PostgreSQL (Durable State)
+Client
+  │
+  ▼
+Fastify API
+  │
+  ├── Rules Engine
+  ├── Event Storage (Postgres)
+  └── Job Creation
+        │
+        ▼
+    Redis Queues
+        │
+        ▼
+     Worker(s)
 
 
 ### Core Components
@@ -48,6 +59,35 @@ PostgreSQL (Durable State)
 - **Worker Processes** – Distributed job execution
 
 ---
+
+## Multi-Tenancy & Authentication
+
+### Org Signup Flow
+
+`POST /orgs/signup`
+
+- Creates organization
+- Creates root admin user
+- Generates secure API key
+- Stores API key in database
+- Returns API key once
+
+### API Key Authentication
+
+All protected endpoints require:
+`x-api-key: <org-api-key>`
+
+Middleware:
+
+- Validates API key
+- Ensures key is ACTIVE
+- Injects `orgId` into request
+- Prevents cross-tenant access
+
+Rules, events, and jobs are always scoped to `orgId`.
+
+---
+
 
 ## Job Lifecycle
 
@@ -195,7 +235,7 @@ npm run start:worker
 
 ---
 
-## ✅ Visibility Timeout
+## Visibility Timeout
 
 - Kill worker mid-processing  
 - Wait timeout  
@@ -228,6 +268,17 @@ npm run start:worker
 - Single Redis instance (can be upgraded to cluster)  
 
 ---
+
+## Important Features
+- Durable job state in Postgres
+
+- Crash-safe visibility timeout
+
+- Rule-driven job creation
+
+- Multi-tenant isolation
+
+- API key authentication
 
 ## Possible Improvements
 

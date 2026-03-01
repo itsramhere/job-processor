@@ -1,32 +1,33 @@
-import 'dotenv/config'
 import Fastify from 'fastify';
-import {runSchema} from './config/schema';
-import { redis } from './config/redis'; 
-import {jobRoutes} from './modules/jobs/job-routes';
-import { startVisibilityManager } from './queue/visibility-manager';
-import { startWorker } from './worker/worker-runner';
-import { ruleRoutes } from './modules/rules/rule-routes';
+import { runSchema } from './config/schema';
+import { orgRoutes } from './modules/orgs/org-routes';
 import { eventRoutes } from './modules/events/event-routes';
+import { ruleRoutes } from './modules/rules/rule-routes';
+import { jobRoutes } from './modules/jobs/job-routes';
+import { metricsRoutes } from './metrics/metrics-routes';
+import { apiKeyMiddleware } from './middleware/auth-middleware';
+import { startWorker } from './worker/worker-runner';
+import { startVisibilityManager } from './queue/visibility-manager';
 
-const fastify = Fastify({
-  logger: true
-});
+const app = Fastify();
 
-const start = async () => {
-    runSchema();
+const start = async () =>{
+  await runSchema();
 
-    fastify.register(jobRoutes, {prefix: '/api/jobs'});
-    fastify.register(ruleRoutes, {prefix: '/api/rules'});
-    fastify.register(eventRoutes, {prefix: '/api/events'});
+  app.register(orgRoutes);
+  app.register(async (protectedApp) => {
+    protectedApp.addHook('preHandler', apiKeyMiddleware);
+    protectedApp.register(eventRoutes);
+    protectedApp.register(ruleRoutes);
+    protectedApp.register(jobRoutes);
+    protectedApp.register(metricsRoutes);
+  });
 
-    const ping = await redis.ping();
-    console.log('Redis ping:', ping); 
-    
-    const projectPort = process.env.PORT ? Number(process.env.PORT) : 3000;
-    await fastify.listen({ port: projectPort });
-    
-    startWorker();
-    startVisibilityManager();
+  await app.listen({ port: 3000 });
+  console.log('Server running on port 3000');
+
+  startWorker();
+  startVisibilityManager();
 };
 
 start();

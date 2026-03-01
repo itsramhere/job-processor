@@ -147,6 +147,13 @@ export async function runSchema(){
       CREATE INDEX IF NOT EXISTS idx_rules_org_event ON rules(org_id, event_type);
     `);
 
+    await client.query(`
+      ALTER TABLE jobs
+      ADD COLUMN IF NOT EXISTS started_at TIMESTAMP,
+      ADD COLUMN IF NOT EXISTS completed_at TIMESTAMP,
+      ADD COLUMN IF NOT EXISTS duration_ms INT;
+    `);
+    
     await client.query('COMMIT');
     console.log('Schema ready');
   }

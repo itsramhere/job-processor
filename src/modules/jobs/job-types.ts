@@ -6,12 +6,12 @@ export enum status{
   FAILED = 'FAILED',
 };
 
-export enum priority {
+export enum priority{
   HIGH = 'HIGH',
   LOW = 'LOW',
 };
 
-export interface job {
+export interface job{
   id: string; 
   org_id: string; 
   event_id: string;

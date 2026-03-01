@@ -7,7 +7,12 @@ export async function postEventHandler(
   reply: FastifyReply
 ){
   try{
-    const event = await processEvent(req.body);
+    const safeBody = {
+      ...req.body,
+      org_id: req.orgId
+    };
+    
+    const event = await processEvent(safeBody);
     return reply.status(201).send(event);
   } 
   catch (err: any){
@@ -22,7 +27,12 @@ export async function getEventHandler(
 ){
   try{
     const event = await fetchEventById(req.params.id);
-    if (!event) return reply.status(404).send({ error: 'Event not found' });
+    if (!event){
+      return reply.status(404).send({ error: 'Event not found' });
+    }
+    if (event.org_id !== req.orgId){
+      return reply.status(403).send({ error: 'Forbidden' });
+    }
     return reply.status(200).send(event);
   } 
   catch (err: any){

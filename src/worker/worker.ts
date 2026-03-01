@@ -1,4 +1,4 @@
-import { getJobById, updateStatus, lockJob, unlockJob } from '../modules/jobs/job-repository';
+import { getJobById, updateStatus, lockJob, unlockJob, markJobStarted, markJobCompleted} from '../modules/jobs/job-repository';
 import { popWithPriority, removeFromProcessingQueue } from '../queue/priority-queue';
 import { handleJobRetry } from './retry-strategy';
 import { status } from '../modules/jobs/job-types';
@@ -30,7 +30,12 @@ export async function processNextJob(): Promise<boolean>{
   console.log(`Worker ${WORKER_ID} locked job ${jobId}`);
 
   try{
-    await simulateHandler(job);
+    await markJobStarted(jobId);                   
+    await updateStatus(jobId, status.PROCESSING);
+
+    await simulateHandler(job.type);
+
+    await markJobCompleted(jobId);   
     await updateStatus(jobId, status.COMPLETED);
     await unlockJob(jobId);
     await removeFromProcessingQueue(jobId);

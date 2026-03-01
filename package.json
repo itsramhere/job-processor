@@ -16,12 +16,14 @@
   "dependencies": {
     "@fastify/env": "^5.0.3",
     "@fastify/sensible": "^6.0.4",
+    "bcrypt": "^6.0.0",
     "dotenv": "^17.3.1",
     "fastify": "^5.7.4",
     "ioredis": "^5.10.0",
     "pg": "^8.19.0"
   },
   "devDependencies": {
+    "@types/bcrypt": "^6.0.0",
     "@types/ioredis": "^4.28.10",
     "@types/jest": "^30.0.0",
     "@types/node": "^25.3.2",
