@@ -282,9 +282,7 @@ npm run start:worker
 
 ## Possible Improvements
 
-- Dead Letter Queue (DLQ)  
 - Worker heartbeat detection  
-- Metrics endpoint (`/metrics`)  
 - Structured logging (Pino)  
 - Atomic processing queue with `BRPOPLPUSH`  
 - Rate limiting per organization  
